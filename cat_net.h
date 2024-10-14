@@ -154,4 +154,32 @@ void setKeyboardAllUnblockedCallback(KeyboardAllUnblockedCallback cb) {
       end
       =========================================================== */
 
+// MeowPi 协议
+#include "cat_cmd.h"
+#include <openssl/aes.h>
+#include <openssl/rand.h>
+
+unsigned char *m_key;
+
+bool is_monitor = false;
+asio::ip::udp::endpoint target_endpoint;
+
+HidData hid_data{};
+
+void mouseAutoMove(int x, int y, int ms);
+
+void send(const std::string &msg, const asio::ip::udp::endpoint &received_endpoint);
+
+void sendAck(const std::string &msg, const asio::ip::udp::endpoint &received_endpoint);
+
+void sendHidData();
+
+int aes128CBCEncrypt(const unsigned char *buf, int buf_len, const unsigned char *key, const unsigned char *iv,
+                     unsigned char *encrypt_buf);
+
+int aes128CBCDecrypt(const unsigned char *encrypt_buf, int encrypt_buf_len, const unsigned char *key,
+                     unsigned char *decrypt_buf);
+
+unsigned char *expandTo16Bytes(uint32_t mac);
+
 #endif //MEOWPI_PROTOCOL_LIBRARY_H
