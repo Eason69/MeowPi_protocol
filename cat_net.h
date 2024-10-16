@@ -13,12 +13,12 @@
 #include <linux/input.h>
 
 /**
- * 触发鼠标按键HID事件
+ * 发送鼠标按键HID事件
  * @param buffer 消息数据
- * @param endpoint 目标信息（IP、端口）
+ * @param sendpoint 目标信息（IP、端口）
  * @return std::size_t 消息数据长度
  */
-typedef std::size_t (*SendHidCallback)(const asio::mutable_buffer &buffer, const asio::ip::udp::endpoint &endpoint);
+typedef std::size_t (*SendHidCallback)(const asio::mutable_buffer &buffer, const asio::ip::udp::endpoint &sendpoint);
 static SendHidCallback sendHid = nullptr;
 
 /**
@@ -107,7 +107,7 @@ void keyboardListen(struct input_event &ev);
 
 /**
  * 盒子键盘锁定键（NumLock、CapsLock、ScrollLock）监听回调
- * @param ev 按键信息
+ * @param lockState 按键信息
  */
 void lockKeyListen(uint8_t lockState);
 
