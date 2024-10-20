@@ -8,7 +8,8 @@
       按需实现  initialize     receive      mouseListen
                keyboardListen lockKeyListen cleanup
       =========================================================== */
-#include <asio.hpp>
+#include <websocketpp/server.hpp>
+#include <websocketpp/config/asio.hpp>
 #include <functional>
 #include <linux/input.h>
 
@@ -18,7 +19,7 @@
  * @param endpoint 目标信息（IP、端口）
  * @return std::size_t 消息数据长度
  */
-typedef std::size_t (*SendHidCallback)(const asio::mutable_buffer &buffer, const asio::ip::udp::endpoint &sendpoint);
+typedef void (*SendHidCallback)(const void* buf, size_t len, websocketpp::frame::opcode::value op);
 static SendHidCallback sendHid = nullptr;
 
 /**
@@ -91,7 +92,8 @@ void initialize(uint32_t uuid, bool is_encrypt);
  * @param buffer_len 消息数据长度
  */
 void
-receive(const asio::ip::udp::endpoint &received_endpoint, const std::array<char, 1024> &buffer, std::size_t buffer_len);
+receive(const websocketpp::connection_hdl& hdl,
+        const websocketpp::server<websocketpp::config::asio_tls>::message_ptr& msg);
 
 /**
  * 盒子鼠标HID监听回调
@@ -156,30 +158,13 @@ void setKeyboardAllUnblockedCallback(KeyboardAllUnblockedCallback cb) {
 
 // MeowPi 协议
 #include "cat_cmd.h"
-#include <openssl/aes.h>
-#include <openssl/rand.h>
-
-unsigned char *m_key;
 
 bool is_monitor = false;
-asio::ip::udp::endpoint target_endpoint;
 
 HidData hid_data{};
 
 void mouseAutoMove(int x, int y, int ms);
 
-void send(const std::string &msg, const asio::ip::udp::endpoint &received_endpoint);
-
-void sendAck(const std::string &msg, const asio::ip::udp::endpoint &received_endpoint);
-
 void sendHidData();
-
-int aes128CBCEncrypt(const unsigned char *buf, int buf_len, const unsigned char *key, const unsigned char *iv,
-                     unsigned char *encrypt_buf);
-
-int aes128CBCDecrypt(const unsigned char *encrypt_buf, int encrypt_buf_len, const unsigned char *key,
-                     unsigned char *decrypt_buf);
-
-unsigned char *expandTo16Bytes(uint32_t mac);
 
 #endif //MEOWPI_PROTOCOL_LIBRARY_H
