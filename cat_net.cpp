@@ -2,6 +2,8 @@
 #include <iomanip>
 #include <cmath>
 #include <iostream>
+#include <openssl/aes.h>
+#include <openssl/rand.h>
 
 void initialize(uint32_t uuid, bool) {
     m_key = expandTo16Bytes(uuid);
@@ -21,7 +23,6 @@ void receive(const asio::ip::udp::endpoint &received_endpoint, const std::array<
     switch (data.cmd) {
         case CMD_CONNECT:
             target_endpoint.address(received_endpoint.address());
-            sendAck("ok", received_endpoint);
             break;
         case CMD_MONITOR:
             if (data.options > 0) {
@@ -30,7 +31,6 @@ void receive(const asio::ip::udp::endpoint &received_endpoint, const std::array<
             } else {
                 is_monitor = false;
             }
-            sendAck("ok", received_endpoint);
             break;
         case CMD_MOUSE_BUTTON:
             mouseButtonPassThrough(data.options, data.value1);
@@ -57,12 +57,11 @@ void receive(const asio::ip::udp::endpoint &received_endpoint, const std::array<
             break;
         case CMD_MOUSE_AUTO_MOVE:
             mouseAutoMove(data.value1, data.value2, data.options);
-            sendAck("ok", received_endpoint);
             break;
         default:
             break;
     }
-//     send("ok", received_endpoint);
+    sendAck(data, received_endpoint);
 }
 
 void mouseListen(struct input_event &ev) {
@@ -117,12 +116,13 @@ void cleanup() {
     std::memset(&hid_data, 0, sizeof(HidData));
 }
 
-void sendAck(const std::string &msg, const asio::ip::udp::endpoint &received_endpoint) {
+void sendAck(CmdData data, const asio::ip::udp::endpoint &received_endpoint) {
+    unsigned char data_buf[sizeof(CmdData)];
+    memcpy(data_buf, &data, sizeof(CmdData));
     unsigned char iv[AES_BLOCK_SIZE];
     RAND_bytes(iv, AES_BLOCK_SIZE);
     unsigned char encrypt_buf[1024];
-    int encrypt_len = aes128CBCEncrypt(reinterpret_cast<const unsigned char *>(msg.c_str()),
-                                       static_cast<int>(msg.length()), m_key, iv, encrypt_buf);
+    int encrypt_len = aes128CBCEncrypt(data_buf, sizeof(CmdData), m_key, iv, encrypt_buf);
     if (encrypt_len <= 0) {
         return;
     }

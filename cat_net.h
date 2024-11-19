@@ -15,7 +15,7 @@
 /**
  * 发送鼠标按键HID事件
  * @param buffer 消息数据
- * @param endpoint 目标信息（IP、端口）
+ * @param sendpoint 目标信息（IP、端口）
  * @return std::size_t 消息数据长度
  */
 typedef std::size_t (*SendHidCallback)(const asio::mutable_buffer &buffer, const asio::ip::udp::endpoint &sendpoint);
@@ -107,7 +107,7 @@ void keyboardListen(struct input_event &ev);
 
 /**
  * 盒子键盘锁定键（NumLock、CapsLock、ScrollLock）监听回调
- * @param ev 按键信息
+ * @param lockState 按键信息
  */
 void lockKeyListen(uint8_t lockState);
 
@@ -156,8 +156,6 @@ void setKeyboardAllUnblockedCallback(KeyboardAllUnblockedCallback cb) {
 
 // MeowPi 协议
 #include "cat_cmd.h"
-#include <openssl/aes.h>
-#include <openssl/rand.h>
 
 unsigned char *m_key;
 
@@ -170,7 +168,7 @@ void mouseAutoMove(int x, int y, int ms);
 
 void send(const std::string &msg, const asio::ip::udp::endpoint &received_endpoint);
 
-void sendAck(const std::string &msg, const asio::ip::udp::endpoint &received_endpoint);
+void sendAck(CmdData data, const asio::ip::udp::endpoint &received_endpoint);
 
 void sendHidData();
 
