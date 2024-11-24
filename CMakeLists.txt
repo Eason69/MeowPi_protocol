@@ -11,6 +11,6 @@ link_directories(${T113_LIB_DIR}/lib)
 
 find_package(OpenSSL REQUIRED)
 
-add_library(cat_protocol_udp SHARED cat_net.cpp)
+add_library(cat_protocol_v1.1_udp SHARED cat_net.cpp)
 
-target_link_libraries(cat_protocol_udp PRIVATE ${OPENSSL_LIBRARIES})
+target_link_libraries(cat_protocol_v1.1_udp PRIVATE ${OPENSSL_LIBRARIES})
