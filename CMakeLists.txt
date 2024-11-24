@@ -2,11 +2,15 @@ cmake_minimum_required(VERSION 3.0)
 project(MeowPi_protocol)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_FIND_ROOT_PATH ~/toolchain-sunxi-musl-gcc-830/toolchain)
+
+set(T113_LIB_DIR ~/t113_libs)
+set(CMAKE_FIND_ROOT_PATH ${T113_LIB_DIR})
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+include_directories(${T113_LIB_DIR}/include)
+link_directories(${T113_LIB_DIR}/lib)
 
 find_package(OpenSSL REQUIRED)
 
-add_library(cat_protocol_udp SHARED cat_net.cpp)
+add_library(cat_protocol_v1.0_udp SHARED cat_net.cpp)
 
-target_link_libraries(cat_protocol_udp PRIVATE ${OPENSSL_LIBRARIES})
+target_link_libraries(cat_protocol_v1.0_udp PRIVATE ${OPENSSL_LIBRARIES})
