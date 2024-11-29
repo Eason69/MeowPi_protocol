@@ -5,21 +5,11 @@
       Start
       -----------------------------------------------------------
       对盒子实现自定义协议接口抽象
-      按需实现  initialize     receive      mouseListen
+      按需实现  initialize     runServer   stopServer   mouseListen
                keyboardListen lockKeyListen cleanup
       =========================================================== */
-#include <asio.hpp>
 #include <functional>
 #include <linux/input.h>
-
-/**
- * 触发鼠标按键HID事件
- * @param buffer 消息数据
- * @param endpoint 目标信息（IP、端口）
- * @return std::size_t 消息数据长度
- */
-typedef std::size_t (*SendHidCallback)(const asio::mutable_buffer &buffer, const asio::ip::udp::endpoint &endpoint);
-static SendHidCallback sendHid = nullptr;
 
 /**
  * 鼠标按键HID事件
@@ -85,13 +75,16 @@ extern "C" {
 void initialize(uint32_t uuid, bool is_encrypt);
 
 /**
- * 服务端发送到盒子的消息回调
- * @param received_endpoint 服务端信息（IP、端口）
- * @param buffer 消息数据
- * @param buffer_len 消息数据长度
+ * 开启网络服务
+ * @param server_port 端口
+ * @return 是否启动成功 true or false
  */
-void
-receive(const asio::ip::udp::endpoint &received_endpoint, const std::array<char, 1024> &buffer, std::size_t buffer_len);
+bool runServer(uint32_t server_port);
+
+/**
+ * 关闭网络服务
+ */
+void stopServer();
 
 /**
  * 盒子鼠标HID监听回调
@@ -107,7 +100,7 @@ void keyboardListen(struct input_event &ev);
 
 /**
  * 盒子键盘锁定键（NumLock、CapsLock、ScrollLock）监听回调
- * @param ev 按键信息
+ * @param lockState 按键信息
  */
 void lockKeyListen(uint8_t lockState);
 
@@ -115,10 +108,6 @@ void lockKeyListen(uint8_t lockState);
  * 退出时清理
  */
 void cleanup();
-
-void setSendCallback(SendHidCallback cb) {
-    sendHid = cb;
-}
 
 void setMouseButtonPassThroughCallback(MouseButtonPassThroughCallback cb) {
     mouseButtonPassThrough = cb;

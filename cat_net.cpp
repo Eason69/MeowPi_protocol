@@ -3,7 +3,12 @@
 void initialize(uint32_t uuid, bool is_encrypt) {
 }
 
-void receive(const asio::ip::udp::endpoint &received_endpoint, const std::array<char, 1024> &buffer, std::size_t buffer_len) {
+bool runServer(uint32_t server_port) {
+
+}
+
+void stopServer() {
+
 }
 
 void mouseListen(struct input_event &ev) {
