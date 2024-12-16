@@ -174,7 +174,7 @@ void sendAck(const std::string &msg, const asio::ip::udp::endpoint &received_end
 
 void sendHidData();
 
-int aes128CBCEncrypt(const unsigned char *buf, int buf_len, const unsigned char *key, const unsigned char *iv,
+int aes128CBCEncrypt(const unsigned char *buf, int buf_len, const unsigned char *key, unsigned char *iv,
                      unsigned char *encrypt_buf);
 
 int aes128CBCDecrypt(const unsigned char *encrypt_buf, int encrypt_buf_len, const unsigned char *key,
