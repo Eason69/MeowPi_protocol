@@ -171,54 +171,47 @@ void mouseAutoMove(int x, int y, int ms) {
     }
 }
 
-int aes128CBCEncrypt(const unsigned char *buf, int buf_len, const unsigned char *key, const unsigned char *iv,
+int aes128CBCEncrypt(const unsigned char *buf, int buf_len, const unsigned char *key, unsigned char *iv,
                      unsigned char *encrypt_buf) {
-    EVP_CIPHER_CTX *ctx;
+    AES_KEY encryptKey;
+    int padding_len = AES_BLOCK_SIZE - (buf_len % AES_BLOCK_SIZE);
+    int total_len = buf_len + padding_len;
+    unsigned char temp_buf[total_len];
 
-    int len;
-    int ciphertext_len;
+    memcpy(temp_buf, buf, buf_len);
+    memset(temp_buf + buf_len, padding_len, padding_len);
+
+    if (AES_set_encrypt_key(key, 128, &encryptKey) < 0) {
+        return -1;
+    }
+
     memcpy(encrypt_buf, iv, AES_BLOCK_SIZE);
 
-    ctx = EVP_CIPHER_CTX_new();
+    AES_cbc_encrypt(temp_buf, encrypt_buf + AES_BLOCK_SIZE, total_len, &encryptKey, iv, AES_ENCRYPT);
 
-    EVP_EncryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, key, iv);
-
-    EVP_EncryptUpdate(ctx, encrypt_buf + AES_BLOCK_SIZE, &len, buf, buf_len);
-    ciphertext_len = len;
-
-    EVP_EncryptFinal_ex(ctx, encrypt_buf + AES_BLOCK_SIZE + len, &len);
-    ciphertext_len += len;
-
-    ciphertext_len += AES_BLOCK_SIZE;
-
-    EVP_CIPHER_CTX_free(ctx);
-
-    return ciphertext_len;
+    return total_len + AES_BLOCK_SIZE;
 }
 
 int aes128CBCDecrypt(const unsigned char *encrypt_buf, int encrypt_buf_len, const unsigned char *key,
                      unsigned char *decrypt_buf) {
-    EVP_CIPHER_CTX *ctx;
-
-    int len;
-    int decryptBufLen;
-
+    AES_KEY decryptKey;
     unsigned char iv[AES_BLOCK_SIZE];
+
     memcpy(iv, encrypt_buf, AES_BLOCK_SIZE);
 
-    ctx = EVP_CIPHER_CTX_new();
+    if (AES_set_decrypt_key(key, 128, &decryptKey) < 0) {
+        return -1;
+    }
 
-    EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), nullptr, key, iv);
+    int len = encrypt_buf_len - AES_BLOCK_SIZE;
+    int padding_len = 0;
+    unsigned char temp_buf[len];
 
-    EVP_DecryptUpdate(ctx, decrypt_buf, &len, encrypt_buf + AES_BLOCK_SIZE, encrypt_buf_len - AES_BLOCK_SIZE);
-    decryptBufLen = len;
+    AES_cbc_encrypt(encrypt_buf + AES_BLOCK_SIZE, temp_buf, len, &decryptKey, iv, AES_DECRYPT);
+    padding_len = temp_buf[len - 1];
+    memcpy(decrypt_buf, temp_buf, len - padding_len);
 
-    EVP_DecryptFinal_ex(ctx, decrypt_buf + len, &len);
-    decryptBufLen += len;
-
-    EVP_CIPHER_CTX_free(ctx);
-
-    return decryptBufLen;
+    return len - padding_len;
 }
 
 unsigned char *expandTo16Bytes(uint32_t uuid) {
