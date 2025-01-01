@@ -46,6 +46,15 @@ typedef void (*KeyboardPassThroughCallback)(uint16_t code, uint16_t value);
 static KeyboardPassThroughCallback keyboardPassThrough = nullptr;
 
 /**
+ * 自动按照曲线移动
+ * @param x x
+ * @param y y
+ * @param ms 时间
+ */
+typedef void (*MouseAutoMoveCallback)(int x, int y, int ms);
+static MouseAutoMoveCallback mouseAutoMoveCb = nullptr;
+
+/**
  * 屏蔽鼠标HID事件
  * @param code 按键名
  * @param isBlocked true屏蔽 false取消屏蔽
@@ -132,6 +141,10 @@ void setKeyboardPassThroughCallback(KeyboardPassThroughCallback cb) {
     keyboardPassThrough = cb;
 }
 
+void setMouseAutoMoveCallback(MouseAutoMoveCallback cb) {
+    mouseAutoMoveCb = cb;
+}
+
 void setMouseBlockedCallback(MouseBlockedCallback cb) {
     mouseBlocked = cb;
 }
@@ -165,8 +178,6 @@ asio::ip::udp::endpoint target_endpoint;
 HidData hid_data{};
 
 void mouseAutoMove(int x, int y, int ms);
-
-void send(const std::string &msg, const asio::ip::udp::endpoint &received_endpoint);
 
 void sendAck(CmdData data, const asio::ip::udp::endpoint &received_endpoint);
 

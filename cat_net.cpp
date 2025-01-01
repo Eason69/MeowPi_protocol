@@ -4,6 +4,7 @@
 #include <iostream>
 #include <openssl/aes.h>
 #include <openssl/rand.h>
+#include <cstring>
 
 void initialize(uint32_t uuid, bool) {
     m_key = expandTo16Bytes(uuid);
@@ -116,7 +117,7 @@ void cleanup() {
     std::memset(&hid_data, 0, sizeof(HidData));
 }
 
-void sendAck(CmdData data, const asio::ip::udp::endpoint &received_endpoint) {
+void sendAck(CmdData data, const asio::ip::udp::endpoint &received_endpoint){
     unsigned char data_buf[sizeof(CmdData)];
     memcpy(data_buf, &data, sizeof(CmdData));
     unsigned char iv[AES_BLOCK_SIZE];
@@ -127,11 +128,6 @@ void sendAck(CmdData data, const asio::ip::udp::endpoint &received_endpoint) {
         return;
     }
     sendHid(asio::buffer(encrypt_buf, encrypt_len), received_endpoint);
-}
-
-void send(const std::string &msg, const asio::ip::udp::endpoint &received_endpoint) {
-    std::vector<char> buffer(msg.begin(), msg.end());
-    sendHid(asio::buffer(buffer), received_endpoint);
 }
 
 void sendHidData() {
@@ -148,27 +144,7 @@ void sendHidData() {
 }
 
 void mouseAutoMove(int x, int y, int ms) {
-    double stepX = static_cast<double>(x) / ms;
-    double stepY = static_cast<double>(y) / ms;
-
-    double accumX = 0.0, accumY = 0.0;
-
-    for (int i = 0; i < ms; ++i) {
-        accumX += stepX;
-        accumY += stepY;
-
-        int moveX = static_cast<int>(round(accumX));
-        int moveY = static_cast<int>(round(accumY));
-
-        accumX -= moveX;
-        accumY -= moveY;
-
-        if (moveX != 0 || moveY != 0) {
-            mouseAxisPassThrough(REL_X, static_cast<int16_t >(moveX));
-            mouseAxisPassThrough(REL_Y, static_cast<int16_t >(moveY));
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+    mouseAutoMoveCb(x, y, ms);
 }
 
 int aes128CBCEncrypt(const unsigned char *buf, int buf_len, const unsigned char *key, unsigned char *iv,
