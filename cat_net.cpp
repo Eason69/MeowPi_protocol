@@ -51,6 +51,12 @@ void receive(const websocketpp::connection_hdl&, const websocketpp::server<webso
         default:
             break;
     }
+
+    std::vector<unsigned char> buffer;
+    buffer.push_back(static_cast<uint8_t>(DataType::CMD_DATA));
+    buffer.insert(buffer.end(), reinterpret_cast<const unsigned char*>(&data),
+                  reinterpret_cast<const unsigned char*>(&data) + sizeof(CmdData));
+    sendHid(buffer.data(), buffer.size(), websocketpp::frame::opcode::binary);
 }
 
 void mouseListen(struct input_event &ev) {
@@ -108,29 +114,13 @@ void cleanup() {
 void sendHidData() {
     unsigned char data_buf[sizeof(HidData)];
     memcpy(data_buf, &hid_data, sizeof(HidData));
-    sendHid(data_buf, sizeof(HidData), websocketpp::frame::opcode::binary);
+    std::vector<unsigned char> buffer;
+    buffer.push_back(static_cast<uint8_t>(DataType::HID_DATA));
+    buffer.insert(buffer.end(), reinterpret_cast<const unsigned char*>(&data_buf),
+                  reinterpret_cast<const unsigned char*>(&data_buf) + sizeof(HidData));
+    sendHid(buffer.data(), buffer.size(), websocketpp::frame::opcode::binary);
 }
 
 void mouseAutoMove(int x, int y, int ms) {
-    double stepX = static_cast<double>(x) / ms;
-    double stepY = static_cast<double>(y) / ms;
-
-    double accumX = 0.0, accumY = 0.0;
-
-    for (int i = 0; i < ms; ++i) {
-        accumX += stepX;
-        accumY += stepY;
-
-        int moveX = static_cast<int>(round(accumX));
-        int moveY = static_cast<int>(round(accumY));
-
-        accumX -= moveX;
-        accumY -= moveY;
-
-        if (moveX != 0 || moveY != 0) {
-            mouseAxisPassThrough(REL_X, static_cast<int16_t >(moveX));
-            mouseAxisPassThrough(REL_Y, static_cast<int16_t >(moveY));
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+    mouseAutoMoveCb(x, y, ms);
 }

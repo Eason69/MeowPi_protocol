@@ -47,6 +47,15 @@ typedef void (*KeyboardPassThroughCallback)(uint16_t code, uint16_t value);
 static KeyboardPassThroughCallback keyboardPassThrough = nullptr;
 
 /**
+ * 自动按照曲线移动
+ * @param x x
+ * @param y y
+ * @param ms 时间
+ */
+typedef void (*MouseAutoMoveCallback)(int x, int y, int ms);
+static MouseAutoMoveCallback mouseAutoMoveCb = nullptr;
+
+/**
  * 屏蔽鼠标HID事件
  * @param code 按键名
  * @param isBlocked true屏蔽 false取消屏蔽
@@ -134,6 +143,10 @@ void setKeyboardPassThroughCallback(KeyboardPassThroughCallback cb) {
     keyboardPassThrough = cb;
 }
 
+void setMouseAutoMoveCallback(MouseAutoMoveCallback cb) {
+    mouseAutoMoveCb = cb;
+}
+
 void setMouseBlockedCallback(MouseBlockedCallback cb) {
     mouseBlocked = cb;
 }
@@ -158,6 +171,11 @@ void setKeyboardAllUnblockedCallback(KeyboardAllUnblockedCallback cb) {
 
 // MeowPi 协议
 #include "cat_cmd.h"
+
+enum class DataType : uint8_t {
+    CMD_DATA = 1,
+    HID_DATA = 2,
+};
 
 bool is_monitor = false;
 
